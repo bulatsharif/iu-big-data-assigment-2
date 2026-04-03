@@ -1,20 +1,26 @@
 #!/bin/bash
+set -euo pipefail
 
 source .venv/bin/activate
 
-
-# Python of the driver (/app/.venv/bin/python)
-export PYSPARK_DRIVER_PYTHON=$(which python) 
-
-
+export PYSPARK_DRIVER_PYTHON="$(which python)"
 unset PYSPARK_PYTHON
 
-# DOWNLOAD a.parquet or any parquet file before you run this
+DOC_COUNT=$(find data -maxdepth 1 -type f -name "*.txt" | wc -l | tr -d ' ')
 
-hdfs dfs -put -f a.parquet / && \
-    spark-submit prepare_data.py && \
-    echo "Putting data to hdfs" && \
-    hdfs dfs -put data / && \
-    hdfs dfs -ls /data && \
-    hdfs dfs -ls /indexer/data && \
-    echo "done data preparation!"
+if [ "$DOC_COUNT" -eq 0 ]; then
+    echo "No text documents found in ./data"
+    exit 1
+fi
+
+echo "Uploading local documents to HDFS /data"
+hdfs dfs -rm -r -f /data /input/data >/dev/null 2>&1 || true
+hdfs dfs -mkdir -p /data
+hdfs dfs -put -f data/*.txt /data/
+
+echo "Building HDFS /input/data"
+spark-submit prepare_data.py
+
+echo "Verifying HDFS outputs"
+hdfs dfs -ls /data
+hdfs dfs -ls /input/data
