@@ -1,31 +1,15 @@
 import sys
-
-
-cur_word = None
-cur_doc_id = None
-cur_count = 0
+import re
 
 for l in sys.stdin:
     l = l.strip()
     if not l:
         continue
-    word, doc_id, count = l.split("\t")
-    count = int(count)
-    if cur_word is None:
-        cur_word = word
-        cur_doc_id = doc_id
-        cur_count = count
-    else:
-        if cur_word == word:
-            cur_count += count
-        else:
-            if cur_word:
-                print(f"{cur_word}\t{cur_doc_id}\t{cur_count}")
-            cur_word = word
-            cur_doc_id = doc_id
-            cur_count = count
-    if cur_word:
-        print(f"{cur_word}\t{cur_doc_id}\t{cur_count}")
-
-if cur_word == word:
-    print(f"{cur_word}\t{cur_doc_id}\t{cur_count}")
+    parts = l.split("\t")
+    if len(parts) != 3:
+        continue
+    doc_id, doc_title, doc_text = parts
+    words = re.findall(r'\b\w+\b', doc_text.lower())
+    
+    for word in words:
+        print(f"{word}\t{doc_id}\t{doc_title}")
