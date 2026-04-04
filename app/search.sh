@@ -13,8 +13,9 @@ fi
 export PYSPARK_DRIVER_PYTHON="$(which python)"
 export PYSPARK_PYTHON=./.venv/bin/python
 
-printf '%s\n' "$QUERY" | spark-submit \
+spark-submit \
     --master yarn \
     --deploy-mode client \
+    --conf spark.yarn.jars=local:/usr/local/spark/jars/* \
     --archives /app/.venv.tar.gz#.venv \
-    query.py
+    query.py "$@"

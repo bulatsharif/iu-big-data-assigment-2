@@ -7,7 +7,10 @@ from cassandra.cluster import Cluster
 from pyspark.sql import SparkSession
 
 
-query_text = sys.stdin.read().strip()
+query_text = " ".join(sys.argv[1:]).strip()
+
+if not query_text:
+    query_text = sys.stdin.read().strip()
 
 if not query_text:
     raise SystemExit("Empty query")
