@@ -1,13 +1,20 @@
 #!/bin/bash
-echo "This script will include commands to search for documents given the query using Spark RDD"
-
+set -euo pipefail
 
 source .venv/bin/activate
 
-# Python of the driver (/app/.venv/bin/python)
-export PYSPARK_DRIVER_PYTHON=$(which python) 
+QUERY="$*"
 
-# Python of the excutor (./.venv/bin/python)
+if [ -z "$QUERY" ]; then
+    echo "Usage: bash search.sh <query>"
+    exit 1
+fi
+
+export PYSPARK_DRIVER_PYTHON="$(which python)"
 export PYSPARK_PYTHON=./.venv/bin/python
 
-spark-submit --master yarn --archives /app/.venv.tar.gz#.venv query.py  $1
+printf '%s\n' "$QUERY" | spark-submit \
+    --master yarn \
+    --deploy-mode client \
+    --archives /app/.venv.tar.gz#.venv \
+    query.py
